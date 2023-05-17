@@ -37,7 +37,7 @@ async function getParameters(entity, repo, dir) {
 
     for (const prm of imageParams) {
       const paramName = prm.split('-')[0];
-      const paramValue = Number(prm.split('-')[1]);
+      const paramValue = prm.split('-')[1];
 
       if (!paramSets[paramName]) {
         paramSets[paramName] = new Set();
@@ -47,7 +47,7 @@ async function getParameters(entity, repo, dir) {
   }
 
   for (const paramName of Object.keys(extractedParameters)) {
-    extractedParameters[paramName].range = Array.from(paramSets[paramName]).sort((a, b) => a - b)
+    extractedParameters[paramName].range = Array.from(paramSets[paramName]).sort((a, b) => Number(a) - Number(b))
   }
 
   console.log({ extractedParameters })
