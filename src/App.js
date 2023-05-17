@@ -67,24 +67,25 @@ function getImageUrlFromData(entity, repo, dir, data) {
 function Row(props) {
   const param = props.param;
   const value = props.currentData[param];
-  const upReached = value === props.parameters[param].range[-1] ? true : false;
+  const upReached = value === props.parameters[param].range.at(-1) ? true : false;
   const downReached = value === props.parameters[param].range[0] ? true : false;
 
   return <div className='Row-container'>
-    <div className='Row-centering'/>
+    <div className='Row-centering' />
     <div className='Row'>
       <p className='Row-text' key={param}>{param}</p>
       <button className='Row-button' onClick={() => props.handleChange(param, value, 'down')} disabled={downReached}>-</button>
       <p className='Row-text'>{value}</p>
       <button className='Row-button' onClick={() => props.handleChange(param, value, 'up')} disabled={upReached}>+</button>
     </div>
-    <div className='Row-centering'/>
+    <div className='Row-centering' />
   </div>
 }
 
 function App() {
   const [parameters, setParameters] = useState([]);
   const [currentData, setCurrentData] = useState({});
+  const [loading, setLoading] = useState(true);
   // get all images
   ///get parameters for call
   const urlParams = new URLSearchParams(window.location.search);
@@ -102,6 +103,7 @@ function App() {
         baseCurrentData[paramName] = paramValue.range[0];
       }
       setCurrentData(baseCurrentData);
+      setLoading(false);
     }
     getData();
   }, []);
@@ -112,25 +114,32 @@ function App() {
     const index = parameters[param].range.indexOf(value);
     if (direction === 'up') {
       stateReplacement[param] = parameters[param].range[index + 1];
-      setCurrentData(stateReplacement);
+      if(stateReplacement[param]){
+        setCurrentData(stateReplacement);
+      };
     }
     else {
       stateReplacement[param] = parameters[param].range[index - 1];
-      setCurrentData(stateReplacement);
+      if(stateReplacement[param]){
+        setCurrentData(stateReplacement);
+      };
     }
   }
 
   return (
     <div className="App">
+      {loading ? <div className='Card'> Loading </div> : 
       <div className='Card'>
-      <div className="App-image">
-        <img src={getImageUrlFromData(entity, repo, dir, currentData)} alt='graph'></img>
+        <div className="App-image">
+          <img src={getImageUrlFromData(entity, repo, dir, currentData)} alt='graph'></img>
+        </div>
+        <div className='App-controls'>{Object.keys(currentData).map(_ =>
+          <Row param={_} parameters={parameters} currentData={currentData} handleChange={changeState} />
+        )}</div>
       </div>
-      <div className='App-controls'>{Object.keys(currentData).map(_ =>
-        <Row param={_} parameters={parameters} currentData={currentData} handleChange={changeState} />
-      )}</div>
-      </div>
+      }
     </div>
+
   );
 }
 
