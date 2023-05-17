@@ -9,7 +9,8 @@ async function getParameters(entity, repo, dir) {
   // get files
   const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main`;
   const dirTreeResponse = await axios.get(url);
-  const dirSHA = dir ? dirTreeResponse.data.tree.find(_ => _.type === 'tree' && _.name === dir) : dirTreeResponse.data.sha;
+  console.log(entity, repo, dir);
+  const dirSHA = dir ? dirTreeResponse.data.tree.find(_ => _.type === 'tree' && _.path === dir).sha : dirTreeResponse.data.sha;
   const dirUrl = `https://api.github.com/repos/${entity}/${repo}/git/trees/${dirSHA}`;
   const filesResponse = await axios.get(dirUrl);
   const allImagesNames = filesResponse.data.tree.filter(_ => _.path.endsWith('.jpg')).map(_ => _.path);
@@ -63,7 +64,11 @@ function getImageUrlFromData(entity, repo, dir, data) {
   }
 
   imgName += '.jpg'
-  return `https://raw.githubusercontent.com/${entity}/${repo}/main/${imgName}`;
+  if(dir) {
+    return `https://raw.githubusercontent.com/${entity}/${repo}/main/${dir}/${imgName}`;
+  } else {
+    return `https://raw.githubusercontent.com/${entity}/${repo}/main/${imgName}`;
+  }
 }
 
 function Row(props) {
