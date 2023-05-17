@@ -25,6 +25,7 @@ async function getParameters(entity, repo, dir) {
     const paramName = prm.split('-')[0];
     const paramNameBeautified = paramName.replace(/([A-Z])/g, ' $1').trim();
 
+
     extractedParameters[paramName] = {
       nameBeautified: paramNameBeautified
     };
@@ -71,14 +72,12 @@ function Row(props) {
   const downReached = value === props.parameters[param].range[0] ? true : false;
 
   return <div className='Row-container'>
-    <div className='Row-centering' />
     <div className='Row'>
-      <p className='Row-text' key={param}>{param}</p>
-      <button className='Row-button' onClick={() => props.handleChange(param, value, 'down')} disabled={downReached}>-</button>
+      <p className='Row-text' key={param}>{props.parameters[param].nameBeautified}</p>
+      <button className='Row-button' onClick={() => props.handleChange(param, value, 'down')} disabled={downReached}>prev</button>
       <p className='Row-text'>{value}</p>
-      <button className='Row-button' onClick={() => props.handleChange(param, value, 'up')} disabled={upReached}>+</button>
+      <button className='Row-button' onClick={() => props.handleChange(param, value, 'up')} disabled={upReached}>next</button>
     </div>
-    <div className='Row-centering' />
   </div>
 }
 
@@ -106,7 +105,7 @@ function App() {
       setLoading(false);
     }
     getData();
-  }, []);
+  }, [dir, entity, repo]);
 
   //buttons
   function changeState(param, value, direction) {
@@ -130,9 +129,7 @@ function App() {
     <div className="App">
       {loading ? <div className='Card'> Loading </div> : 
       <div className='Card'>
-        <div className="App-image">
-          <img src={getImageUrlFromData(entity, repo, dir, currentData)} alt='graph'></img>
-        </div>
+        <img className="App-image" src={getImageUrlFromData(entity, repo, dir, currentData)} alt='graph'></img>
         <div className='App-controls'>{Object.keys(currentData).map(_ =>
           <Row param={_} parameters={parameters} currentData={currentData} handleChange={changeState} />
         )}</div>
