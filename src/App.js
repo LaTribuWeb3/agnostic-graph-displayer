@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 async function getParameters(entity, repo, dir) {
+
   // get files
   const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main`;
   const dirTreeResponse = await axios.get(url);
@@ -95,6 +96,11 @@ function App() {
   //// recursive call to get all images
   useEffect(() => {
     async function getData() {
+      
+      if(entity == null || repo == null) {
+        console.log('entity or repo is null');
+        return;
+      }
       const params = await getParameters(entity, repo, dir);
       setParameters(params);
       const baseCurrentData = {}
@@ -127,7 +133,7 @@ function App() {
 
   return (
     <div className="App">
-      {loading ? <div className='Card'> Loading </div> : 
+      {(entity == null || repo == null) ? <div className='Card'> Please enter entity and repo </div> : loading ? <div className='Card'> Loading </div> : 
       <div className='Card'>
         <img className="App-image" src={getImageUrlFromData(entity, repo, dir, currentData)} alt='graph'></img>
         <div className='App-controls'>{Object.keys(currentData).map(_ =>
