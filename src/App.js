@@ -81,7 +81,7 @@ function Row(props) {
     <div className='Row'>
       <p className='Row-text' key={param}>{props.parameters[param].nameBeautified}</p>
       <button className='Row-button' onClick={() => props.handleChange(param, value, 'down')} disabled={downReached}>{'<'}</button>
-      <p className='Row-text'>{value}</p>
+      <p className='Row-value'>{value}</p>
       <button className='Row-button' onClick={() => props.handleChange(param, value, 'up')} disabled={upReached}>{'>'}</button>
     </div>
   </div>
