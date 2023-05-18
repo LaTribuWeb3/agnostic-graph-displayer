@@ -7,7 +7,7 @@ import axios from 'axios';
 async function getParameters(entity, repo, dir) {
 
   // get files
-  const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main`;
+  const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main?recursive=1`;
   const dirTreeResponse = await axios.get(url);
   console.log(entity, repo, dir);
   const dirSHA = dir ? dirTreeResponse.data.tree.find(_ => _.type === 'tree' && _.path === dir).sha : dirTreeResponse.data.sha;
