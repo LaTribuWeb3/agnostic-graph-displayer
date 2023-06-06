@@ -13,10 +13,13 @@ async function getParameters(entity, repo, dir) {
   const dirUrl = `https://api.github.com/repos/${entity}/${repo}/git/trees/${dirSHA}`;
   const filesResponse = await axios.get(dirUrl);
   const allImagesNames = filesResponse.data.tree.filter(_ => _.path.endsWith('.jpg')).map(_ => _.path);
-  const tooltipReq = await axios.get(`https://raw.githubusercontent.com/${entity}/${repo}/main/${dir}/tooltip.json`).catch(function(error){});
   let tooltip = undefined;
-  if(tooltipReq.data){
-    tooltip = tooltipReq.data
+  try{
+    const tooltipReq = await axios.get(`https://raw.githubusercontent.com/${entity}/${repo}/main/${dir}/tooltip.json`);
+    tooltip = tooltipReq.data;
+  }
+  catch(error){
+    console.log('no tooltip data in specified directory')
   }
 
 
