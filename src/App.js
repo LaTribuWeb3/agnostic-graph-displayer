@@ -9,11 +9,15 @@ async function getParameters(entity, repo, dir) {
   // get files
   const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main?recursive=1`;
   const dirTreeResponse = await axios.get(url);
-  console.log(entity, repo, dir);
   const dirSHA = dir ? dirTreeResponse.data.tree.find(_ => _.type === 'tree' && _.path === dir).sha : dirTreeResponse.data.sha;
   const dirUrl = `https://api.github.com/repos/${entity}/${repo}/git/trees/${dirSHA}`;
   const filesResponse = await axios.get(dirUrl);
   const allImagesNames = filesResponse.data.tree.filter(_ => _.path.endsWith('.jpg')).map(_ => _.path);
+  const tooltipReq = await axios.get(`https://raw.githubusercontent.com/${entity}/${repo}/main/${dir}/tooltip.json`).catch(function(error){});
+  let tooltip = undefined;
+  if(tooltipReq.data){
+    tooltip = tooltipReq.data
+  }
 
 
   // extract parameter names from the first image 
@@ -28,10 +32,18 @@ async function getParameters(entity, repo, dir) {
     const paramNameBeautified = paramName.replace(/([A-Z])/g, ' $1').trim();
 
 
+
     extractedParameters[paramName] = {
       nameBeautified: paramNameBeautified
     };
+    if(tooltip && tooltip[paramName]){
+      extractedParameters[paramName].tooltipText = tooltip[paramName];
+    }
+    else{
+      extractedParameters[paramName].tooltipText = undefined;
+    }
   }
+
 
   const paramSets = {};
   for (const imageFileName of allImagesNames) {
@@ -53,7 +65,6 @@ async function getParameters(entity, repo, dir) {
     extractedParameters[paramName].range = Array.from(paramSets[paramName]).sort((a, b) => Number(a) - Number(b))
   }
 
-  console.log({ extractedParameters })
   return extractedParameters;
 }
 
@@ -73,13 +84,14 @@ function getImageUrlFromData(entity, repo, dir, data) {
 
 function Row(props) {
   const param = props.param;
+  const tooltip = props.parameters[param].tooltipText
   const value = props.currentData[param];
   const upReached = value === props.parameters[param].range.at(-1) ? true : false;
   const downReached = value === props.parameters[param].range[0] ? true : false;
 
   return <div className='Row-container'>
     <div className='Row'>
-      <p className='Row-text' key={param}>{props.parameters[param].nameBeautified}</p>
+      <p className='Row-text' key={param} title={tooltip}>{props.parameters[param].nameBeautified}</p>
       <button className='Row-button' onClick={() => props.handleChange(param, value, 'down')} disabled={downReached}>{'<'}</button>
       <p className='Row-value'>{value}</p>
       <button className='Row-button' onClick={() => props.handleChange(param, value, 'up')} disabled={upReached}>{'>'}</button>
