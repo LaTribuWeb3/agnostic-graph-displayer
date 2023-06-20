@@ -7,14 +7,19 @@ import axios from 'axios';
 async function getParameters(entity, repo, dir) {
 
   // get files
-  const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main?recursive=1`;
+  const url = `https://api.github.com/repos/${entity}/${repo}/git/trees/main`;
   const dirTreeResponse = await axios.get(url);
-  const dirSHA = dir ? dirTreeResponse.data.tree.find(_ => _.type === 'tree' && _.path === dir).sha : dirTreeResponse.data.sha;
+  let dirSHA = dirTreeResponse.data.sha;
+  
+  if(dir) {
+    dirSHA = await findDirSHAForSubDir(dir, dirTreeResponse, repo, dirSHA, entity);
+  }
+
   const dirUrl = `https://api.github.com/repos/${entity}/${repo}/git/trees/${dirSHA}`;
   const filesResponse = await axios.get(dirUrl);
   const allImagesNames = filesResponse.data.tree.filter(_ => _.path.endsWith('.jpg')).map(_ => _.path);
   let tooltip = undefined;
-  try{
+  try {
     const tooltipReq = await axios.get(`https://raw.githubusercontent.com/${entity}/${repo}/main/${dir}/tooltip.json`);
     tooltip = tooltipReq.data;
   }
@@ -69,6 +74,42 @@ async function getParameters(entity, repo, dir) {
   }
 
   return extractedParameters;
+}
+
+async function findDirSHAForSubDir(dir, dirTreeResponse, repo, dirSHA, entity) {
+  let builtPath = '';
+  const subDirs = dir.split('/');
+  let nextDir = subDirs.shift();
+
+  // find the dir in the dirTree
+  let nextDirTree = dirTreeResponse.data.tree.find(_ => _.path === nextDir);
+  if (!nextDirTree) {
+    throw new Error(`Could not find directory ${builtPath}/${nextDirTree} in ${repo}`);
+  }
+
+  dirSHA = nextDirTree.sha;
+  builtPath += `${nextDir}/`;
+
+  while (subDirs.length > 0) {
+    const nextUrl = `https://api.github.com/repos/${entity}/${repo}/git/trees/${dirSHA}`;
+    const nextDirThreeResponse = await axios.get(nextUrl);
+    nextDir = subDirs.shift();
+
+    nextDirTree = null;
+    for(const dirTree of nextDirThreeResponse.data.tree) {
+      if(dirTree.path === nextDir) {
+        nextDirTree = dirTree
+      }
+    }
+    if (!nextDirTree) {
+      throw new Error(`Could not find directory ${builtPath}${nextDirTree} in ${repo}`);
+    }
+
+    dirSHA = nextDirTree.sha;
+    builtPath += `${nextDir}/`;
+  }
+
+  return dirSHA;
 }
 
 function getImageUrlFromData(entity, repo, dir, data) {
